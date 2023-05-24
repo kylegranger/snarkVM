@@ -280,8 +280,11 @@ mod tests {
         let rng = &mut TestRng::default();
         let vm = crate::vm::test_helpers::sample_vm_with_genesis_block(rng);
 
+        println!("asdf: test_verify_execution");
+
         // Fetch a execution transaction.
         let transaction = crate::vm::test_helpers::sample_execution_transaction_with_fee(rng);
+        println!("asdf: after sample executation transaction with fee");
 
         match transaction {
             Transaction::Execute(_, execution, _) => {

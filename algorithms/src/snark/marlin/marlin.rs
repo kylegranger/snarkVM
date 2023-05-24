@@ -48,6 +48,7 @@ use snarkvm_curves::PairingEngine;
 use snarkvm_fields::{One, PrimeField, ToConstraintField, Zero};
 use snarkvm_r1cs::ConstraintSynthesizer;
 use snarkvm_utilities::{to_bytes_le, ToBytes};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use std::{borrow::Borrow, collections::BTreeMap, ops::Deref, sync::Arc};
 
@@ -244,6 +245,7 @@ where
 
     fn universal_setup(max_degree: &Self::UniversalSetupConfig) -> Result<Self::UniversalSetupParameters, SNARKError> {
         let setup_time = start_timer!(|| { format!("Marlin::UniversalSetup with max_degree {max_degree}",) });
+        println!("asdf: {} marlin::universal_setup", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         let srs = SonicKZG10::<E, FS>::load_srs(*max_degree).map_err(Into::into);
         end_timer!(setup_time);
@@ -372,6 +374,11 @@ where
         zk_rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
         let prover_time = start_timer!(|| "Marlin::Prover");
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator A",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+
         if keys_to_constraints.is_empty() {
             return Err(SNARKError::EmptyBatch);
         }
@@ -405,6 +412,10 @@ where
             circuit_ids.push(circuit_id);
         }
         assert_eq!(prover_state.total_instances, total_instances);
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator B",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         let committer_key = CommitterUnionKey::union(keys_to_constraints.keys().map(|pk| pk.committer_key.deref()));
 
@@ -412,6 +423,8 @@ where
             keys_to_constraints.keys().map(|pk| pk.circuit_verifying_key.circuit_commitments.as_slice());
 
         let mut sponge = Self::init_sponge(fs_parameters, &inputs_and_batch_sizes, circuit_commitments.clone());
+
+        println!("asdf: {}  --- First round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         // --------------------------------------------------------------------
         // First round
@@ -441,6 +454,7 @@ where
 
         // --------------------------------------------------------------------
         // Second round
+        println!("asdf: {}  --- Second round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         Self::terminate(terminator)?;
         let (second_oracles, prover_state) =
@@ -465,6 +479,7 @@ where
 
         // --------------------------------------------------------------------
         // Third round
+        println!("asdf: {}  --- Third round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         Self::terminate(terminator)?;
 
@@ -489,6 +504,7 @@ where
 
         // --------------------------------------------------------------------
         // Fourth round
+        println!("asdf: {}  --- Fourth round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         Self::terminate(terminator)?;
 
@@ -511,6 +527,11 @@ where
         // --------------------------------------------------------------------
 
         Self::terminate(terminator)?;
+
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator C",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         // Gather prover polynomials in one vector.
         let polynomials: Vec<_> = keys_to_constraints
@@ -558,7 +579,10 @@ where
 
             h_2: *fourth_commitments[0].commitment(),
         };
-
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator D",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         let labeled_commitments: Vec<_> = circuit_commitments
             .into_iter()
             .flatten()
@@ -584,7 +608,10 @@ where
             let empty_randomness = Randomness::<E>::empty();
             assert!(commitment_randomnesses.iter().all(|r| r == &empty_randomness));
         }
-
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator E",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         // Compute the AHP verifier's query set.
         let (query_set, verifier_state) = AHPForR1CS::<_, MM>::verifier_query_set(verifier_state);
         let lc_s = AHPForR1CS::<_, MM>::construct_linear_combinations(
@@ -610,6 +637,10 @@ where
         end_timer!(eval_time);
 
         Self::terminate(terminator)?;
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator F",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         sponge.absorb_nonnative_field_elements(evaluations.to_field_elements());
 
@@ -640,6 +671,11 @@ where
         }
         end_timer!(prover_time);
 
+        println!(
+            "asdf: {} marlin::prove_batch_with_terminator G",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+
         Ok(proof)
     }
 
@@ -651,6 +687,8 @@ where
         keys_to_inputs: &BTreeMap<<Self::VerifyingKey as PrepareOrd>::Prepared, &[B]>,
         proof: &Self::Proof,
     ) -> Result<bool, SNARKError> {
+        println!("asdf: marlin::verify_batch_prepared");
+
         if keys_to_inputs.is_empty() {
             return Err(SNARKError::EmptyBatch);
         }
@@ -738,6 +776,8 @@ where
 
         let first_round_info = AHPForR1CS::<E::Fr, MM>::first_round_polynomial_info(batch_sizes.iter());
 
+        println!("  first_round_info.len {}", first_round_info.len());
+
         let mut first_comms_consumed = 0;
         let mut first_commitments = batch_sizes
             .iter()
@@ -781,6 +821,8 @@ where
             LabeledCommitment::new_with_info(&second_round_info["h_1"], comms.h_1),
         ];
 
+        println!("  second_round_info.len {}", second_round_info.len());
+
         let third_round_info = AHPForR1CS::<E::Fr, MM>::third_round_polynomial_info(circuit_infos.clone().into_iter());
         let third_commitments = comms
             .g_a_commitments
@@ -797,8 +839,12 @@ where
             })
             .collect_vec();
 
+        println!("  third_round_info.len {}", third_round_info.len());
+
         let fourth_round_info = AHPForR1CS::<E::Fr, MM>::fourth_round_polynomial_info();
         let fourth_commitments = [LabeledCommitment::new_with_info(&fourth_round_info["h_2"], comms.h_2)];
+
+        println!("  fourth_round_info.len {}", fourth_round_info.len());
 
         let circuit_commitments = keys_to_inputs.keys().map(|vk| vk.orig_vk.circuit_commitments.as_slice());
         let mut sponge = Self::init_sponge(fs_parameters, &inputs_and_batch_sizes, circuit_commitments.clone());
@@ -927,8 +973,7 @@ pub mod test {
     use crate::{
         crypto_hash::PoseidonSponge,
         snark::marlin::{MarlinHidingMode, MarlinSNARK, TestCircuit},
-        AlgebraicSponge,
-        SRS,
+        AlgebraicSponge, SRS,
     };
     use snarkvm_curves::bls12_377::{Bls12_377, Fq, Fr};
     use snarkvm_utilities::{TestRng, Uniform};

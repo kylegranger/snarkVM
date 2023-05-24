@@ -69,6 +69,8 @@ impl<N: Network> Process<N> {
     ) -> Result<Vec<FinalizeOperation<N>>> {
         let timer = timer!("Program::finalize_execution");
 
+        println!("asdf: finalize_execution");
+
         // Ensure the execution contains transitions.
         ensure!(!execution.is_empty(), "There are no transitions in the execution");
 
@@ -97,7 +99,11 @@ impl<N: Network> Process<N> {
             // Finalize each transition, starting from the last one.
             for transition in execution.transitions() {
                 #[cfg(debug_assertions)]
-                println!("Finalizing transition for {}/{}...", transition.program_id(), transition.function_name());
+                println!(
+                    "asdf: Finalizing transition for {}/{}...",
+                    transition.program_id(),
+                    transition.function_name()
+                );
 
                 // Retrieve the stack.
                 let stack = self.get_stack(transition.program_id())?;

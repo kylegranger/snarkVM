@@ -77,6 +77,7 @@ use console::{
     types::{Field, Group},
 };
 use snarkvm_synthesizer_snark::{Certificate, ProvingKey, UniversalSRS, VerifyingKey};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use aleo_std::prelude::{finish, lap, timer};
 use indexmap::IndexMap;
@@ -117,6 +118,7 @@ impl<N: Network> CallStack<N> {
         inclusion: Arc<RwLock<Inclusion<N>>>,
         metrics: Arc<RwLock<Vec<CallMetrics<N>>>>,
     ) -> Result<Self> {
+        println!("asdf: {} stack::execute", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
         Ok(CallStack::Execute(authorization, execution, inclusion, metrics))
     }
 }
@@ -126,6 +128,7 @@ impl<N: Network> CallStack<N> {
     pub fn replicate(&self) -> Self {
         match self {
             CallStack::Authorize(requests, private_key, authorization) => {
+                println!("asdf: replicate::Authorize");
                 CallStack::Authorize(requests.clone(), *private_key, authorization.replicate())
             }
             CallStack::Synthesize(requests, private_key, authorization) => {

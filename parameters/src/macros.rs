@@ -172,10 +172,17 @@ macro_rules! impl_load_bytes_logic_remote {
         let mut file_path = aleo_std::aleo_dir();
         file_path.push($local_dir);
         file_path.push($filename);
+        // println!("impl_load_bytes_logic_remote {:?}"INCLUSION_PROVING_KEY
+
+
+        let timer = std::time::Instant::now();
+
 
         let buffer = if file_path.exists() {
             // Attempts to load the parameter file locally with an absolute path.
-            std::fs::read(&file_path)?
+            let temp = std::fs::read(&file_path)?;
+            println!("file load duration: {:?}", timer.elapsed().as_millis());
+            temp
         } else {
             // Downloads the missing parameters and stores it in the local directory for use.
              #[cfg(not(feature = "no_std_out"))]
@@ -190,6 +197,7 @@ macro_rules! impl_load_bytes_logic_remote {
 
             // Construct the URL.
             let url = format!("{}/{}", $remote_url, $filename);
+            println!("   URL {:?}", url);
 
             // Load remote file
             cfg_if::cfg_if! {
@@ -326,6 +334,11 @@ macro_rules! impl_remote {
                     metadata["checksum"].as_str().expect("Failed to parse checksum").to_string();
                 let expected_size: usize =
                     metadata["size"].to_string().parse().expect("Failed to retrieve the file size");
+
+                println!("asdf: fname {:?}", $fname);
+                println!("asdf: expected_checksum {:?}", expected_checksum);
+                println!("asdf: expected_size {:?}", expected_size);
+                println!("asdf: metadata[checksum] {:?}", metadata["checksum"]);
 
                 // Construct the versioned filename.
                 let filename = match expected_checksum.get(0..7) {

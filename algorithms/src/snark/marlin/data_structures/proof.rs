@@ -17,6 +17,7 @@ use crate::{
     snark::marlin::{ahp, CircuitId},
     SNARKError,
 };
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use snarkvm_curves::PairingEngine;
 use snarkvm_fields::PrimeField;
@@ -24,8 +25,7 @@ use snarkvm_utilities::{
     error,
     io::{self, Read, Write},
     serialize::*,
-    FromBytes,
-    ToBytes,
+    FromBytes, ToBytes,
 };
 
 use std::collections::BTreeMap;
@@ -277,6 +277,8 @@ impl<E: PairingEngine> Proof<E> {
         msg: ahp::prover::ThirdMessage<E::Fr>,
         pc_proof: sonic_pc::BatchLCProof<E>,
     ) -> Result<Self, SNARKError> {
+        println!("asdf: {} Proof::new", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+
         let mut total_instances = 0;
         let batch_sizes: Vec<usize> = batch_sizes.into_values().collect();
         for (z_b_evals, batch_size) in evaluations.z_b_evals.iter().zip(&batch_sizes) {
@@ -344,6 +346,8 @@ impl<E: PairingEngine> CanonicalDeserialize for Proof<E> {
         compress: Compress,
         validate: Validate,
     ) -> Result<Self, SerializationError> {
+        println!("asdf: Proof::deserialize_with_mode");
+
         let batch_sizes: Vec<u64> = CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
         let batch_sizes: Vec<usize> = batch_sizes.into_iter().map(|x| x as usize).collect();
         Ok(Proof {

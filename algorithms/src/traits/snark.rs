@@ -96,6 +96,7 @@ pub trait SNARK {
         keys_to_constraints: &BTreeMap<&Self::ProvingKey, &[&C]>,
         rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
+        println!("prove_batch");
         Self::prove_batch_with_terminator(fs_parameters, keys_to_constraints, &AtomicBool::new(false), rng)
     }
 
@@ -105,6 +106,7 @@ pub trait SNARK {
         constraints: &C,
         rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
+        println!("snark::prove");
         let mut keys_to_constraints = BTreeMap::new();
         let constraints = [constraints];
         keys_to_constraints.insert(proving_key, &constraints[..]);
@@ -125,6 +127,7 @@ pub trait SNARK {
         terminator: &AtomicBool,
         rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
+        println!("prove_with_terminator");
         let mut keys_to_constraints = BTreeMap::new();
         let constraints = [constraints];
         keys_to_constraints.insert(proving_key, &constraints[..]);

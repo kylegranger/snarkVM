@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use super::*;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 impl<N: Network> Process<N> {
     /// Executes the given authorization.
@@ -23,6 +24,8 @@ impl<N: Network> Process<N> {
         rng: &mut R,
     ) -> Result<(Response<N>, Execution<N>, Inclusion<N>, Vec<CallMetrics<N>>)> {
         let timer = timer!("Process::execute");
+
+        println!("asdf: {} Process::execute", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         // Retrieve the main request (without popping it).
         let request = authorization.peek_next()?;
@@ -37,11 +40,17 @@ impl<N: Network> Process<N> {
         // Initialize the metrics.
         let metrics = Arc::new(RwLock::new(Vec::new()));
         // Initialize the call stack.
+        println!("asdf: {} ..CallStack::execute", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+
         let call_stack = CallStack::execute(authorization, execution.clone(), inclusion.clone(), metrics.clone())?;
         lap!(timer, "Initialize call stack");
+        println!("asdf: {} Initialize call stack", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+
         // Execute the circuit.
         let response = self.get_stack(request.program_id())?.execute_function::<A, R>(call_stack, rng)?;
         lap!(timer, "Execute the function");
+        println!("asdf: {} Execute the function", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+
         // Extract the execution.
         let execution = Arc::try_unwrap(execution).unwrap().into_inner();
         // Ensure the execution is not empty.

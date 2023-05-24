@@ -127,6 +127,8 @@ impl<N: Network> StackExecute<N> for Stack<N> {
     ) -> Result<Response<N>> {
         let timer = timer!("Stack::execute_function");
 
+        println!("JKL: execute_function A");
+
         // Ensure the call stack is not `Evaluate`.
         ensure!(!matches!(call_stack, CallStack::Evaluate(..)), "Illegal operation: cannot evaluate in execute mode");
 
@@ -148,6 +150,10 @@ impl<N: Network> StackExecute<N> for Stack<N> {
         let function = self.get_function(console_request.function_name())?;
         // Retrieve the number of inputs.
         let num_inputs = function.inputs().len();
+        println!(" ...num_inputs {}", num_inputs);
+        for input in function.inputs() {
+            println!(" ...input {:?}", input);
+        }
         // Ensure the number of inputs matches the number of input statements.
         if num_inputs != console_request.inputs().len() {
             bail!("Expected {num_inputs} inputs, found {}", console_request.inputs().len())
@@ -168,6 +174,8 @@ impl<N: Network> StackExecute<N> for Stack<N> {
         // Ensure the request is well-formed.
         ensure!(console_request.verify(&input_types), "Request is invalid");
         lap!(timer, "Verify the request");
+
+        println!(" ...function.name() {:?}", function.name());
 
         // Initialize the registers.
         let mut registers = Registers::new(call_stack, self.get_register_types(function.name())?.clone());
@@ -192,12 +200,14 @@ impl<N: Network> StackExecute<N> for Stack<N> {
         registers.set_tvk_circuit(request.tvk().clone());
 
         lap!(timer, "Initialize the registers");
+        println!("JKL: execute_function B");
 
         #[cfg(debug_assertions)]
         Self::log_circuit::<A, _>("Request");
 
         // Retrieve the number of constraints for verifying the request in the circuit.
         let num_request_constraints = A::num_constraints();
+        println!(" ...num_request_constraints {:?}", num_request_constraints);
 
         // Retrieve the number of public variables in the circuit.
         let num_public = A::num_public();
@@ -216,6 +226,7 @@ impl<N: Network> StackExecute<N> for Stack<N> {
 
         // Initialize a tracker to determine if there are any function calls.
         let mut contains_function_call = false;
+        println!("JKL: execute_function C");
 
         // Execute the instructions.
         for instruction in function.instructions() {
@@ -287,6 +298,7 @@ impl<N: Network> StackExecute<N> for Stack<N> {
             // Ensure the number of public variables remains the same.
             ensure!(A::num_public() == num_public, "Instructions in function injected public variables");
         }
+        println!("JKL: execute_function D");
 
         // Construct the response.
         let response = circuit::Response::from_outputs(
@@ -329,6 +341,7 @@ impl<N: Network> StackExecute<N> for Stack<N> {
                 let mut console_finalize_inputs = Vec::with_capacity(command.operands().len());
                 // Initialize a vector for the (circuit) finalize input bits.
                 let mut circuit_finalize_input_bits = Vec::with_capacity(command.operands().len());
+                println!("JKL: execute_function E");
 
                 // Retrieve the finalize inputs.
                 for operand in command.operands() {
@@ -377,6 +390,7 @@ impl<N: Network> StackExecute<N> for Stack<N> {
 
         #[cfg(debug_assertions)]
         Self::log_circuit::<A, _>("Complete");
+        println!("JKL: execute_function F");
 
         // Eject the response.
         let response = response.eject_value();
@@ -413,6 +427,7 @@ impl<N: Network> StackExecute<N> for Stack<N> {
                 lap!(timer, "Synthesize the {} circuit key", function.name());
             }
         }
+        println!("JKL: execute_function G");
 
         // If the circuit is in `CheckDeployment` mode, then save the assignment.
         if let CallStack::CheckDeployment(_, _, ref assignments) = registers.call_stack() {
@@ -423,6 +438,8 @@ impl<N: Network> StackExecute<N> for Stack<N> {
         // If the circuit is in `Execute` mode, then execute the circuit into a transition.
         else if let CallStack::Execute(_, ref execution, ref inclusion, ref metrics) = registers.call_stack() {
             registers.ensure_console_and_circuit_registers_match()?;
+
+            println!("JKL: execute_function H------------");
 
             // Retrieve the proving key.
             let proving_key = self.get_proving_key(function.name())?;

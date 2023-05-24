@@ -20,6 +20,7 @@ use crate::snark::marlin::{
 use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::ConstraintSynthesizer;
 use std::collections::BTreeMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use snarkvm_utilities::cfg_iter;
 #[cfg(not(feature = "std"))]
@@ -39,6 +40,10 @@ impl<F: PrimeField, MM: MarlinMode> AHPForR1CS<F, MM> {
         circuits_to_constraints: &BTreeMap<&'a Circuit<F, MM>, &[&C]>,
     ) -> Result<prover::State<'a, F, MM>, AHPError> {
         let init_time = start_timer!(|| "AHP::Prover::Init");
+
+        //     let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        // println!("{}", time);
+        println!("asdf: {} init_prover A", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         let indices_and_assignments = cfg_iter!(circuits_to_constraints)
             .map(|(circuit, constraints)| {
@@ -79,12 +84,12 @@ impl<F: PrimeField, MM: MarlinMode> AHPForR1CS<F, MM> {
                         assert_eq!(private_variables.len(), num_private_variables);
 
                         if cfg!(debug_assertions) {
-                            println!("Number of padded public variables in Prover::Init: {num_public_variables}");
-                            println!("Number of private variables: {num_private_variables}");
-                            println!("Number of constraints: {num_constraints}");
-                            println!("Number of non-zero entries in A: {num_non_zero_a}");
-                            println!("Number of non-zero entries in B: {num_non_zero_b}");
-                            println!("Number of non-zero entries in C: {num_non_zero_c}");
+                            println!("asdf: Number of padded public variables in Prover::Init: {num_public_variables}");
+                            println!("asdf: Number of private variables: {num_private_variables}");
+                            println!("asdf: Number of constraints: {num_constraints}");
+                            println!("asdf: Number of non-zero entries in A: {num_non_zero_a}");
+                            println!("asdf: Number of non-zero entries in B: {num_non_zero_b}");
+                            println!("asdf: Number of non-zero entries in C: {num_non_zero_c}");
                         }
 
                         if circuit.index_info.num_constraints != num_constraints
@@ -117,8 +122,10 @@ impl<F: PrimeField, MM: MarlinMode> AHPForR1CS<F, MM> {
                 Ok((*circuit, assignments))
             })
             .collect::<Result<BTreeMap<&'a Circuit<F, MM>, Vec<prover::Assignments<F>>>, AHPError>>()?;
+        println!("asdf: {} init_prover B", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         let state = prover::State::initialize(indices_and_assignments)?;
+        println!("asdf: {} init_prover C", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         Ok(state)
     }
