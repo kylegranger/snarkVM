@@ -28,6 +28,7 @@ impl<N: Network, C: ConsensusStorage<N>> VM<N, C> {
         rng: &mut R,
     ) -> Result<Transaction<N>> {
         // Compute the authorization.
+        println!("execute line 31--------");
         let authorization = self.authorize(private_key, program_id, function_name, inputs, rng)?;
         // Compute the execution.
         let (_response, execution, _metrics) = self.execute_authorization_raw(authorization, query.clone(), rng)?;

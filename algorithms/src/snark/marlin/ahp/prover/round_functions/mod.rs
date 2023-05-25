@@ -14,8 +14,7 @@
 
 use crate::snark::marlin::{
     ahp::{indexer::Circuit, AHPError, AHPForR1CS},
-    prover,
-    MarlinMode,
+    prover, MarlinMode,
 };
 use snarkvm_fields::PrimeField;
 use snarkvm_r1cs::ConstraintSynthesizer;
@@ -43,8 +42,11 @@ impl<F: PrimeField, MM: MarlinMode> AHPForR1CS<F, MM> {
 
         //     let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
         // println!("{}", time);
-        println!("asdf: {} init_prover A", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
-
+        // println!("asdf: {} init_prover A", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(
+            "      TRACE 6: {} src/snark/marinly/ahp/prover/mode.rs::init_prover()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         let indices_and_assignments = cfg_iter!(circuits_to_constraints)
             .map(|(circuit, constraints)| {
                 let num_non_zero_a = circuit.index_info.num_non_zero_a;
@@ -122,10 +124,13 @@ impl<F: PrimeField, MM: MarlinMode> AHPForR1CS<F, MM> {
                 Ok((*circuit, assignments))
             })
             .collect::<Result<BTreeMap<&'a Circuit<F, MM>, Vec<prover::Assignments<F>>>, AHPError>>()?;
-        println!("asdf: {} init_prover B", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        // println!("asdf: {} init_prover B", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         let state = prover::State::initialize(indices_and_assignments)?;
-        println!("asdf: {} init_prover C", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(
+            "      -------: {} ...done init_prover",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         Ok(state)
     }

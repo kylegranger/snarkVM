@@ -60,6 +60,8 @@ impl<N: Network> Stack<N> {
     ) -> Result<()> {
         let timer = timer!("Stack::verify_deployment");
 
+        println!("verify_deployment-----");
+
         // Sanity Checks //
 
         // Ensure the deployment is ordered.

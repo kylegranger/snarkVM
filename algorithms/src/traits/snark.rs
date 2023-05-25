@@ -13,11 +13,11 @@
 // limitations under the License.
 
 use crate::{errors::SNARKError, AlgebraicSponge};
-use snarkvm_utilities::{CanonicalDeserialize, CanonicalSerialize, FromBytes, ToBytes, ToMinimalBits};
-
 use rand::{CryptoRng, Rng};
 use snarkvm_fields::{PrimeField, ToConstraintField};
 use snarkvm_r1cs::ConstraintSynthesizer;
+use snarkvm_utilities::{CanonicalDeserialize, CanonicalSerialize, FromBytes, ToBytes, ToMinimalBits};
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{borrow::Borrow, collections::BTreeMap, fmt::Debug, sync::atomic::AtomicBool};
 
 /// Defines trait that describes preparing from an unprepared version to a prepare version.
@@ -96,7 +96,20 @@ pub trait SNARK {
         keys_to_constraints: &BTreeMap<&Self::ProvingKey, &[&C]>,
         rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
-        println!("prove_batch");
+        println!(
+            "    TRACE 4: {} algorithms/src/traits/snark.rs::prove_batch()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+        println!(
+            "    -------: {} keys_to_constraints.len() = {}",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            keys_to_constraints.len()
+        );
+        // println!(
+        //     "    -------: {} fs_parameters.len() = {:?}",
+        //     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+        //     fs_parameters.
+        // );
         Self::prove_batch_with_terminator(fs_parameters, keys_to_constraints, &AtomicBool::new(false), rng)
     }
 
@@ -106,7 +119,15 @@ pub trait SNARK {
         constraints: &C,
         rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
-        println!("snark::prove");
+        println!(
+            "   TRACE 3: {} algorithms/src/traits/snark.rs::prove()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+        println!(
+            "    ----arg: {} proving_key len = {:?}",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            proving_key.to_bytes_le()?.len()
+        );
         let mut keys_to_constraints = BTreeMap::new();
         let constraints = [constraints];
         keys_to_constraints.insert(proving_key, &constraints[..]);
@@ -127,7 +148,12 @@ pub trait SNARK {
         terminator: &AtomicBool,
         rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
-        println!("prove_with_terminator");
+        // println!("prove_with_terminator");
+        println!(
+            "     TRACE 5: {} algorithms/src/traits/snark.rs::prove_with_terminator()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+
         let mut keys_to_constraints = BTreeMap::new();
         let constraints = [constraints];
         keys_to_constraints.insert(proving_key, &constraints[..]);

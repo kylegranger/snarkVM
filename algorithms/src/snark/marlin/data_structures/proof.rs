@@ -277,16 +277,28 @@ impl<E: PairingEngine> Proof<E> {
         msg: ahp::prover::ThirdMessage<E::Fr>,
         pc_proof: sonic_pc::BatchLCProof<E>,
     ) -> Result<Self, SNARKError> {
-        println!("asdf: {} Proof::new", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
-
+        println!(
+            "      TRACE 6: {} algorithms/src/snark/marlin/data_structures/proof.rs::new()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         let mut total_instances = 0;
         let batch_sizes: Vec<usize> = batch_sizes.into_values().collect();
+        println!(
+            "      -------: {} ...batch_sizes.len() {}",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            batch_sizes.len()
+        );
         for (z_b_evals, batch_size) in evaluations.z_b_evals.iter().zip(&batch_sizes) {
             total_instances += batch_size;
             if z_b_evals.len() != *batch_size {
                 return Err(SNARKError::BatchSizeMismatch);
             }
         }
+        println!(
+            "      -------: {} ...total_instances {}",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            total_instances
+        );
         if commitments.witness_commitments.len() != total_instances {
             return Err(SNARKError::BatchSizeMismatch);
         }

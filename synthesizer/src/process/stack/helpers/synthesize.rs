@@ -58,6 +58,8 @@ impl<N: Network> Stack<N> {
         // Initialize the call stack.
         let call_stack = CallStack::Synthesize(vec![request], burner_private_key, authorization);
         // Synthesize the circuit.
+        println!("synthesize-----");
+
         let _response = self.execute_function::<A, R>(call_stack, rng)?;
 
         // Ensure the proving key exists.

@@ -175,13 +175,13 @@ macro_rules! impl_load_bytes_logic_remote {
         // println!("impl_load_bytes_logic_remote {:?}"INCLUSION_PROVING_KEY
 
 
-        let timer = std::time::Instant::now();
+        // let timer = std::time::Instant::now();
 
 
         let buffer = if file_path.exists() {
             // Attempts to load the parameter file locally with an absolute path.
             let temp = std::fs::read(&file_path)?;
-            println!("file load duration: {:?}", timer.elapsed().as_millis());
+            // println!(" -------: file load msec: {:?}", timer.elapsed().as_millis());
             temp
         } else {
             // Downloads the missing parameters and stores it in the local directory for use.

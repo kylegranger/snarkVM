@@ -15,32 +15,15 @@
 use crate::{
     fft::EvaluationDomain,
     polycommit::sonic_pc::{
-        Commitment,
-        CommitterUnionKey,
-        Evaluations,
-        LabeledCommitment,
-        QuerySet,
-        Randomness,
-        SonicKZG10,
+        Commitment, CommitterUnionKey, Evaluations, LabeledCommitment, QuerySet, Randomness, SonicKZG10,
         VerifierUnionKey,
     },
     snark::marlin::{
         ahp::{AHPError, AHPForR1CS, CircuitId, EvaluationsProvider},
-        proof,
-        prover,
-        witness_label,
-        CircuitProvingKey,
-        CircuitVerifyingKey,
-        MarlinError,
-        MarlinMode,
-        Proof,
+        proof, prover, witness_label, CircuitProvingKey, CircuitVerifyingKey, MarlinError, MarlinMode, Proof,
         UniversalSRS,
     },
-    AlgebraicSponge,
-    PrepareOrd,
-    SNARKError,
-    SNARK,
-    SRS,
+    AlgebraicSponge, PrepareOrd, SNARKError, SNARK, SRS,
 };
 use itertools::Itertools;
 use rand::{CryptoRng, Rng};
@@ -162,7 +145,11 @@ impl<E: PairingEngine, FS: AlgebraicSponge<E::Fq, 2>, MM: MarlinMode> MarlinSNAR
     }
 
     fn terminate(terminator: &AtomicBool) -> Result<(), MarlinError> {
-        if terminator.load(Ordering::Relaxed) { Err(MarlinError::Terminated) } else { Ok(()) }
+        if terminator.load(Ordering::Relaxed) {
+            Err(MarlinError::Terminated)
+        } else {
+            Ok(())
+        }
     }
 
     fn init_sponge<'a>(
@@ -374,8 +361,14 @@ where
         zk_rng: &mut R,
     ) -> Result<Self::Proof, SNARKError> {
         let prover_time = start_timer!(|| "Marlin::Prover");
+        // println!(
+        //     "asdf: {} marlin::prove_batch_with_terminator A",
+        //     SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        // );
+
+        let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
         println!(
-            "asdf: {} marlin::prove_batch_with_terminator A",
+            "     TRACE 5: {} algorithms/src/snark/marlin/marlin.rs::prove_batch_with_terminator()",
             SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
         );
 
@@ -412,10 +405,6 @@ where
             circuit_ids.push(circuit_id);
         }
         assert_eq!(prover_state.total_instances, total_instances);
-        println!(
-            "asdf: {} marlin::prove_batch_with_terminator B",
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
-        );
 
         let committer_key = CommitterUnionKey::union(keys_to_constraints.keys().map(|pk| pk.committer_key.deref()));
 
@@ -424,7 +413,10 @@ where
 
         let mut sponge = Self::init_sponge(fs_parameters, &inputs_and_batch_sizes, circuit_commitments.clone());
 
-        println!("asdf: {}  --- First round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(
+            "     -------: {}  --- First round",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         // --------------------------------------------------------------------
         // First round
@@ -454,7 +446,10 @@ where
 
         // --------------------------------------------------------------------
         // Second round
-        println!("asdf: {}  --- Second round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(
+            "     -------: {}  --- Second round",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         Self::terminate(terminator)?;
         let (second_oracles, prover_state) =
@@ -479,7 +474,10 @@ where
 
         // --------------------------------------------------------------------
         // Third round
-        println!("asdf: {}  --- Third round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(
+            "     -------: {}  --- Third round",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         Self::terminate(terminator)?;
 
@@ -504,7 +502,10 @@ where
 
         // --------------------------------------------------------------------
         // Fourth round
-        println!("asdf: {}  --- Fourth round", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(
+            "     -------: {}  --- Fourth round",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
 
         Self::terminate(terminator)?;
 
@@ -529,7 +530,7 @@ where
         Self::terminate(terminator)?;
 
         println!(
-            "asdf: {} marlin::prove_batch_with_terminator C",
+            "     -------: {} ...do keys to constraints",
             SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
         );
 
@@ -580,7 +581,7 @@ where
             h_2: *fourth_commitments[0].commitment(),
         };
         println!(
-            "asdf: {} marlin::prove_batch_with_terminator D",
+            "     -------: {} ...gather commitments together",
             SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
         );
         let labeled_commitments: Vec<_> = circuit_commitments
@@ -594,6 +595,10 @@ where
             .chain(fourth_commitments.into_iter())
             .collect();
 
+        println!(
+            "     -------: {} ...gather commitment randomness together",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         // Gather commitment randomness together.
         let commitment_randomnesses: Vec<Randomness<E>> = keys_to_constraints
             .keys()
@@ -609,7 +614,7 @@ where
             assert!(commitment_randomnesses.iter().all(|r| r == &empty_randomness));
         }
         println!(
-            "asdf: {} marlin::prove_batch_with_terminator E",
+            "     -------: {} ...compute AHP verifier's query set",
             SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
         );
         // Compute the AHP verifier's query set.
@@ -638,7 +643,7 @@ where
 
         Self::terminate(terminator)?;
         println!(
-            "asdf: {} marlin::prove_batch_with_terminator F",
+            "     -------: {} ...sponge.absorb_nonnative_field_elements",
             SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
         );
 
@@ -656,6 +661,7 @@ where
 
         Self::terminate(terminator)?;
 
+        println!("     -------: {} ...create proof", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
         let proof = Proof::<E>::new(batch_sizes, commitments, evaluations, prover_third_message, pc_proof)?;
         assert_eq!(proof.pc_proof.is_hiding(), MM::ZK);
 
@@ -671,9 +677,11 @@ where
         }
         end_timer!(prover_time);
 
+        let duration = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - start;
         println!(
-            "asdf: {} marlin::prove_batch_with_terminator G",
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+            "     -------: {} ...done prove_batch_with_terminator: duration = {} ms",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            duration
         );
 
         Ok(proof)

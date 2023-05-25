@@ -24,7 +24,6 @@ mod finalize;
 
 #[cfg(test)]
 mod tests;
-
 use crate::{
     atomic_batch_scope,
     block::{Deployment, Execution, Fee, FinalizeOperation, Input, Transition},
@@ -38,6 +37,7 @@ use console::{
     types::{U16, U64},
 };
 use snarkvm_synthesizer_snark::{ProvingKey, UniversalSRS, VerifyingKey};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use aleo_std::prelude::{finish, lap, timer};
 use indexmap::IndexMap;
@@ -130,6 +130,10 @@ impl<N: Network> Process<N> {
         // Synthesize the 'credits.aleo' circuit keys.
         for function_name in program.functions().keys() {
             // Load the proving key.
+            println!(
+                " -------: {} load proving key for {function_name}",
+                SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+            );
             let proving_key = N::get_credits_proving_key(function_name.to_string())?;
             stack.insert_proving_key(function_name, ProvingKey::new(proving_key.clone()))?;
             lap!(timer, "Load proving key for {function_name}");
@@ -142,10 +146,19 @@ impl<N: Network> Process<N> {
         lap!(timer, "Load circuit keys");
 
         // Initialize the inclusion proving key.
+        println!(
+            " -------: {} load inclusion proving key",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         let _ = N::inclusion_proving_key();
         lap!(timer, "Load inclusion proving key");
 
         // Initialize the inclusion verifying key.
+        println!(
+            " -------: {} load inclusion verifying key",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+        let _ = N::inclusion_proving_key();
         let _ = N::inclusion_verifying_key();
         lap!(timer, "Load inclusion verifying key");
 

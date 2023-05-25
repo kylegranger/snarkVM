@@ -14,7 +14,7 @@
 
 use super::*;
 use snarkvm_synthesizer::CallMetrics;
-
+use std::time::{SystemTime, UNIX_EPOCH};
 impl<N: Network> Package<N> {
     /// Runs a program function with the given inputs.
     #[allow(clippy::type_complexity)]
@@ -35,18 +35,38 @@ impl<N: Network> Package<N> {
             bail!("Function '{function_name}' does not exist.")
         }
 
+        let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        println!(
+            "TRACE 0: {} vm/cli/package/run.rs::run()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         // Build the package, if the package requires building.
+        println!(
+            "-------: {} ...build the package, if the package requires building",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
         self.build::<A>(endpoint)?;
+        println!("-------: {} ...done build", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         // Prepare the locator (even if logging is disabled, to sanity check the locator is well-formed).
         let _locator = Locator::<N>::from_str(&format!("{program_id}/{function_name}"))?;
+        println!("-------: {} ...prepared locator", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
 
         #[cfg(feature = "aleo-cli")]
         println!("🚀 Executing '{}'...\n", _locator.to_string().bold());
 
         // Construct the process.
+        let t1 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        println!("-------: {} ...get_process", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
         let process = self.get_process()?;
+        let d2 = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - t1;
+        println!(
+            "-------: {} ...done get_process: duration {}",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            d2
+        );
         // Authorize the function call.
+        println!("-------: {} ...call authorize", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
         let authorization = process.authorize::<A, R>(private_key, program_id, function_name, inputs.iter(), rng)?;
 
         // Retrieve the program.
@@ -95,7 +115,17 @@ impl<N: Network> Package<N> {
         process.insert_verifying_key(program_id, &function_name, verifier.verifying_key().clone())?;
 
         // Execute the circuit.
+        let ex = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        println!("-------: {} ...call execute", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
         let (response, execution, inclusion, metrics) = process.execute::<A, R>(authorization, rng)?;
+        let duration = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - start;
+        let xduration = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - ex;
+        println!(
+            "-------: {} ...done: execution = {} ms, total duration = {} ms",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            xduration,
+            duration,
+        );
 
         Ok((response, execution, inclusion, metrics))
     }

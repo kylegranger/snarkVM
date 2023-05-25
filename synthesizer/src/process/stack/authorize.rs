@@ -24,17 +24,27 @@ impl<N: Network> Stack<N> {
         inputs: impl ExactSizeIterator<Item = impl TryInto<Value<N>>>,
         rng: &mut R,
     ) -> Result<Authorization<N>> {
+        let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
         let timer = timer!("Stack::authorize");
+        println!(
+            " TRACE 1: {} src/process/stack/authorize.rs::authorize()",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
+        );
+        println!(" ----arg: private_key {:?}", private_key);
 
         // Ensure the program contains functions.
         ensure!(!self.program.functions().is_empty(), "Program '{}' has no functions", self.program.id());
 
         // Prepare the function name.
         let function_name = function_name.try_into().map_err(|_| anyhow!("Invalid function name"))?;
+        println!(" ----arg: function_name={:?}", function_name);
+        println!(" ----arg: private_key.sk_sig={:?}", private_key.sk_sig());
+        println!(" ----arg: private_key.r_sig={:?}", private_key.r_sig());
         // Retrieve the function.
         let function = self.get_function(&function_name)?;
         // Retrieve the input types.
         let input_types = function.input_types();
+        println!(" -------: function input_types len {:?}", input_types.len());
         // Ensure the number of inputs matches the number of input types.
         if function.inputs().len() != input_types.len() {
             bail!(
@@ -58,7 +68,12 @@ impl<N: Network> Stack<N> {
         lap!(timer, "Construct the authorization from the function");
 
         finish!(timer);
-
+        let duration = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - start;
+        println!(
+            " -------: {} ...done authorize: duration = {} ms",
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis(),
+            duration
+        );
         // Return the authorization.
         Ok(authorization)
     }

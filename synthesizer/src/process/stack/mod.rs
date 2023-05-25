@@ -44,35 +44,14 @@ mod helpers;
 
 use crate::{
     block::{Deployment, Execution, Transition},
-    CallOperator,
-    Closure,
-    Function,
-    Instruction,
-    Operand,
-    Process,
-    Program,
+    CallOperator, Closure, Function, Instruction, Operand, Process, Program,
 };
 use console::{
     account::{Address, PrivateKey},
     network::prelude::*,
     program::{
-        Entry,
-        EntryType,
-        Identifier,
-        Literal,
-        Locator,
-        Owner as RecordOwner,
-        Plaintext,
-        PlaintextType,
-        ProgramID,
-        Record,
-        RecordType,
-        Register,
-        RegisterType,
-        Request,
-        Response,
-        Value,
-        ValueType,
+        Entry, EntryType, Identifier, Literal, Locator, Owner as RecordOwner, Plaintext, PlaintextType, ProgramID,
+        Record, RecordType, Register, RegisterType, Request, Response, Value, ValueType,
     },
     types::{Field, Group},
 };
@@ -118,7 +97,7 @@ impl<N: Network> CallStack<N> {
         inclusion: Arc<RwLock<Inclusion<N>>>,
         metrics: Arc<RwLock<Vec<CallMetrics<N>>>>,
     ) -> Result<Self> {
-        println!("asdf: {} stack::execute", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
+        println!(" -------: {} stack::execute", SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis());
         Ok(CallStack::Execute(authorization, execution, inclusion, metrics))
     }
 }
